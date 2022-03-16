@@ -7,8 +7,13 @@ from keras.datasets.cifar import load_batch
 from keras.utils.data_utils import get_file
 from tensorflow.python.util.tf_export import keras_export
 
+def get_img_class(tf_BatchDataset):
+    data = tf_BatchDataset.unbatch()
+    images = np.array(list(data.map(lambda x, y: x)))
+    labels = np.array(list(data.map(lambda x, y: y)))
+    print('NO.Images = ',len(images),'NO.Classes = ',len(labels),' Done!')
+    return images , labels
 
-@keras_export('keras.datasets.cifar10.load_data')
 def load_data():
   """Loads the CIFAR10 dataset.
   This is a dataset of 50,000 32x32 color training images and 10,000 test
@@ -57,27 +62,62 @@ def load_data():
 #       file_hash=
 #       '6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce')
 
-  num_train_samples = 50000
+  # num_train_samples = 50000
 
-  x_train = np.empty((num_train_samples, 3, 32, 32), dtype='uint8')
-  y_train = np.empty((num_train_samples,), dtype='uint8')
+  # x_train = np.empty((num_train_samples, 3, 32, 32), dtype='uint8')
+  # y_train = np.empty((num_train_samples,), dtype='uint8')
 
-  for i in range(1, 6):
-    fpath = os.path.join(path, 'data_batch_' + str(i))
-    (x_train[(i - 1) * 10000:i * 10000, :, :, :],
-     y_train[(i - 1) * 10000:i * 10000]) = load_batch(fpath)
+  # for i in range(1, 6):
+  #   fpath = os.path.join(path, 'data_batch_' + str(i))
+  #   (x_train[(i - 1) * 10000:i * 10000, :, :, :],
+  #    y_train[(i - 1) * 10000:i * 10000]) = load_batch(fpath)
 
-  fpath = os.path.join(path, 'test_batch')
-  x_test, y_test = load_batch(fpath)
+  # fpath = os.path.join(path, 'test_batch')
+  # x_test, y_test = load_batch(fpath)
 
-  y_train = np.reshape(y_train, (len(y_train), 1))
-  y_test = np.reshape(y_test, (len(y_test), 1))
+  # y_train = np.reshape(y_train, (len(y_train), 1))
+  # y_test = np.reshape(y_test, (len(y_test), 1))
 
-  if backend.image_data_format() == 'channels_last':
-    x_train = x_train.transpose(0, 2, 3, 1)
-    x_test = x_test.transpose(0, 2, 3, 1)
+  # if backend.image_data_format() == 'channels_last':
+  #   x_train = x_train.transpose(0, 2, 3, 1)
+  #   x_test = x_test.transpose(0, 2, 3, 1)
 
-  x_test = x_test.astype(x_train.dtype)
-  y_test = y_test.astype(y_train.dtype)
+  # x_test = x_test.astype(x_train.dtype)
+  # y_test = y_test.astype(y_train.dtype)
+
+  BATCH_SIZE = 64
+  IMAGE_SIZE = 224
+  train_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+      r"C:\Users\pv23228\Documents\Federated Learning POV\archive\chest_xray\train",
+      shuffle = True,
+      image_size = (IMAGE_SIZE,IMAGE_SIZE),
+      batch_size = BATCH_SIZE 
+  )
+  test_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+      r"C:\Users\pv23228\Documents\Federated Learning POV\archive\chest_xray\test",
+      shuffle = True,
+      image_size = (IMAGE_SIZE,IMAGE_SIZE),
+      batch_size = BATCH_SIZE 
+  )
+  val_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+      r"C:\Users\pv23228\Documents\Federated Learning POV\archive\chest_xray\val",
+      shuffle = True,
+      image_size = (IMAGE_SIZE,IMAGE_SIZE),
+      batch_size = BATCH_SIZE 
+  )
+
+  images_train , classes_train = get_img_class(train_dataset)
+  images_test , classes_test = get_img_class(test_dataset)
+  images_val , classes_val = get_img_class(val_dataset)
+
+  # Normalize the data. Before we need to connvert data type to float for computation.
+  x_train = images_train.astype('float32')
+  x_test = images_test.astype('float32')
+  x_train /= 255
+  x_test /= 255
+  num_classes = 2
+  # Convert class vectors to binary class matrices. This is called one hot encoding.
+  y_train = utils.np_utils.to_categorical(classes_train, num_classes)
+  y_test = utils.np_utils.to_categorical(classes_test, num_classes)
 
   return (x_train, y_train), (x_test, y_test)

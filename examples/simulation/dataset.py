@@ -24,11 +24,11 @@ XYList = List[XY]
 PartitionedDataset = List[Tuple[XY, XY]]
 
 
+
 def shuffle(x: np.ndarray, y: np.ndarray) -> XY:
     """Shuffle x and y."""
     idx = np.random.permutation(len(x))
     return x[idx], y[idx]
-
 
 def partition(x: np.ndarray, y: np.ndarray, num_partitions: int) -> XYList:
     """Split x and y into a number of partitions."""
@@ -50,8 +50,8 @@ def create_partitions(
 def load(
     num_partitions: int,
 ) -> PartitionedDataset:
-    """Create partitioned version of CIFAR-10."""
-    xy_train, xy_test = tf.keras.datasets.cifar10.load_data()
+    """Create partitioned version of Dataset."""
+    xy_train, xy_test = load_data()
 
     xy_train_partitions = create_partitions(xy_train, num_partitions)
     xy_test_partitions = create_partitions(xy_test, num_partitions)
